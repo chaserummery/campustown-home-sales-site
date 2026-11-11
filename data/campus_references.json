@@ -1,0 +1,93 @@
+{
+  "method": "Approximate reference coordinates fitted from property coordinates and miles_to_campus, which is rounded to one decimal mile.",
+  "landmarks": [
+    {
+      "university": "University of California, Davis",
+      "landmark": "Shields Library / UC Davis Quad",
+      "latitude": 38.539709,
+      "longitude": -121.749146,
+      "sales_used": 941,
+      "median_distance_fit_error_miles": 0.0236
+    },
+    {
+      "university": "University of Florida",
+      "landmark": "Century Tower",
+      "latitude": 29.648845,
+      "longitude": -82.343296,
+      "sales_used": 5629,
+      "median_distance_fit_error_miles": 0.0241
+    },
+    {
+      "university": "University of Georgia",
+      "landmark": "Georgia campus reference point",
+      "latitude": 33.955814,
+      "longitude": -83.374493,
+      "sales_used": 2814,
+      "median_distance_fit_error_miles": 0.0254
+    },
+    {
+      "university": "The University of Iowa",
+      "landmark": "Old Capitol",
+      "latitude": 41.661315,
+      "longitude": -91.53564,
+      "sales_used": 1909,
+      "median_distance_fit_error_miles": 0.0252
+    },
+    {
+      "university": "University of Illinois Urbana-Champaign",
+      "landmark": "Foellinger Auditorium / Illinois Main Quad",
+      "latitude": 40.105901,
+      "longitude": -88.227186,
+      "sales_used": 3664,
+      "median_distance_fit_error_miles": 0.0246
+    },
+    {
+      "university": "Purdue University",
+      "landmark": "Engineering Fountain",
+      "latitude": 40.428659,
+      "longitude": -86.913754,
+      "sales_used": 4616,
+      "median_distance_fit_error_miles": 0.0249
+    },
+    {
+      "university": "University of Michigan",
+      "landmark": "The Diag",
+      "latitude": 42.276711,
+      "longitude": -83.738697,
+      "sales_used": 3021,
+      "median_distance_fit_error_miles": 0.0253
+    },
+    {
+      "university": "The University of North Carolina at Chapel Hill",
+      "landmark": "Old Well",
+      "latitude": 35.912045,
+      "longitude": -79.051272,
+      "sales_used": 3016,
+      "median_distance_fit_error_miles": 0.0242
+    },
+    {
+      "university": "The Pennsylvania State University",
+      "landmark": "Penn State campus reference point",
+      "latitude": 40.795963,
+      "longitude": -77.862745,
+      "sales_used": 1351,
+      "median_distance_fit_error_miles": 0.0262
+    },
+    {
+      "university": "University of Virginia",
+      "landmark": "Virginia campus reference point",
+      "latitude": 38.035008,
+      "longitude": -78.505004,
+      "sales_used": 2775,
+      "median_distance_fit_error_miles": 0.025
+    },
+    {
+      "university": "University of Wisconsin-Madison",
+      "landmark": "Bascom Hill",
+      "latitude": 43.075298,
+      "longitude": -89.404085,
+      "sales_used": 5706,
+      "median_distance_fit_error_miles": 0.0249
+    }
+  ]
+}

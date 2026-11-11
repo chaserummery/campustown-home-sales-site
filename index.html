@@ -4,232 +4,117 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f7f5">
+  <meta name="description" content="Explore home sale prices around 11 university campuses.">
   <title>Campus Housing Explorer</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-  <style>
-    :root {
-      color-scheme: light;
-      --ink: #172b26;
-      --muted: #687a73;
-      --paper: #f5f7f5;
-      --card: #fff;
-      --line: #e2e9e4;
-      --green: #174d3b;
-      --green-soft: #e7f1eb;
-      --orange: #f4a340;
-      --shadow: 0 16px 44px rgba(27, 54, 42, .08);
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--paper); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    .shell { width: min(1420px, calc(100% - 48px)); margin: 0 auto; }
-    header { padding: 24px 0 22px; }
-    .brand { display: flex; align-items: center; gap: 12px; color: var(--green); font-size: .82rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
-    .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; background: var(--green); color: white; font-size: 1rem; letter-spacing: 0; }
-    main { padding-bottom: 34px; }
-    .intro { display: flex; align-items: end; justify-content: space-between; gap: 32px; margin: 22px 0 26px; }
-    h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.5rem); letter-spacing: -.055em; line-height: 1.04; }
-    .subtitle { margin: 12px 0 0; color: var(--muted); font-size: clamp(1rem, 2vw, 1.2rem); }
-    .campus-chip { display: inline-flex; flex-shrink: 0; align-items: center; gap: 9px; padding: 11px 15px; border: 1px solid #d8e5dc; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: .87rem; font-weight: 700; }
-    .campus-chip span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d34731; box-shadow: 0 0 0 4px #f5d9d3; }
-    .map-card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--card); box-shadow: var(--shadow); }
-    .map-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 24px 17px; }
-    .map-heading h2 { margin: 0; font-size: 1rem; letter-spacing: -.01em; }
-    .map-heading p { margin: 4px 0 0; color: var(--muted); font-size: .83rem; }
-    .count { white-space: nowrap; color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; }
-    #map { height: min(67vh, 650px); min-height: 430px; background: #e7ece9; }
-    .map-footer { display: flex; justify-content: space-between; gap: 24px; padding: 18px 24px 20px; border-top: 1px solid var(--line); }
-    .legend { min-width: min(100%, 340px); }
-    .legend-title { margin: 0 0 10px; color: #35463f; font-size: .78rem; font-weight: 750; }
-    .gradient { height: 10px; border-radius: 99px; background: linear-gradient(90deg, #f5e9bd 0%, #f5ad59 43%, #e46c42 72%, #96334a 100%); }
-    .legend-ticks { display: flex; justify-content: space-between; margin-top: 5px; color: var(--muted); font-size: .72rem; }
-    .legend-note { margin: 8px 0 0; color: var(--muted); font-size: .74rem; line-height: 1.45; }
-    .key { display: flex; flex-wrap: wrap; align-content: start; gap: 10px 18px; color: #52635b; font-size: .77rem; }
-    .key span { display: inline-flex; align-items: center; gap: 7px; }
-    .key-dot { display: inline-block; width: 13px; height: 13px; border: 2px solid white; border-radius: 50%; background: #d45a43; box-shadow: 0 0 0 1px #a94435; }
-    .key-campus { width: 11px; height: 11px; border: 2px solid white; background: #bc382b; transform: rotate(45deg); box-shadow: 0 0 0 1px #81251e; }
-    .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
-    .note { padding: 17px 19px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.72); color: var(--muted); font-size: .8rem; line-height: 1.55; }
-    .note strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: .82rem; }
-    footer { padding: 4px 0 28px; color: var(--muted); font-size: .75rem; }
-    .property-popup { min-width: 205px; font-family: inherit; }
-    .popup-price { margin-bottom: 7px; color: #8f3446; font-size: 1.18rem; font-weight: 800; }
-    .popup-place { margin-bottom: 10px; color: #607169; font-size: .8rem; }
-    .popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
-    .popup-grid span { color: #74827c; font-size: .68rem; }
-    .popup-grid b { display: block; color: #263a32; font-size: .82rem; font-weight: 700; }
-    .leaflet-popup-content { margin: 14px 16px; }
-    .leaflet-container { font: inherit; }
-    .loading { display: grid; height: 100%; min-height: 430px; place-items: center; color: var(--muted); }
-    .error { padding: 18px; color: #7d3027; }
-    @media (max-width: 700px) {
-      .shell { width: min(100% - 28px, 600px); }
-      header { padding-top: 17px; }
-      .intro { display: block; margin: 22px 0 20px; }
-      .campus-chip { margin-top: 17px; }
-      .map-heading { align-items: start; padding: 17px 17px 14px; }
-      .count { max-width: 115px; text-align: right; white-space: normal; }
-      #map { height: 60vh; min-height: 380px; }
-      .map-footer { display: block; padding: 16px 17px 18px; }
-      .key { margin-top: 17px; }
-      .notes { grid-template-columns: 1fr; gap: 10px; }
-      .note { padding: 14px 15px; }
-    }
-    @media (prefers-reduced-motion: no-preference) {
-      .map-card { animation: appear .45s ease-out both; }
-      @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="shell">
-    <header>
-      <div class="brand"><span class="brand-mark" aria-hidden="true">⌖</span> College town housing data</div>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Campus Housing Explorer home">
+        <span class="brand-mark" aria-hidden="true">⌖</span>
+        <span>Campus Housing Explorer</span>
+      </a>
+      <span class="topbar-note">A look at home sales near 11 US campuses</span>
     </header>
-    <main>
-      <section class="intro" aria-labelledby="page-title">
-        <div>
-          <h1 id="page-title">Campus Housing Explorer</h1>
-          <p class="subtitle">Does Living Closer to Campus Cost More?</p>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow">College-town home sales · March 2026 dataset</p>
+          <h1 id="page-title">Does Living Closer to Campus Cost More?</h1>
+          <p class="hero-text">Explore sale prices, distance, and home features across university markets. See what the data shows—and where it cannot explain why a home costs more.</p>
         </div>
-        <div class="campus-chip"><span aria-hidden="true"></span> University of Illinois Urbana-Champaign</div>
+        <label class="university-control" for="university-select">
+          <span>Choose a university</span>
+          <select id="university-select" disabled aria-describedby="campus-reference-note"></select>
+          <small id="campus-reference-note">Campus pin is an approximate reference reconstructed from rounded distance data.</small>
+        </label>
       </section>
 
-      <section class="map-card" aria-labelledby="map-title">
-        <div class="map-heading">
-          <div><h2 id="map-title">Recent home sales near campus</h2><p>Select a point to explore the reported property details.</p></div>
-          <div class="count" id="sale-count" aria-live="polite">Loading sales…</div>
-        </div>
-        <div id="map" role="application" aria-label="Interactive map of home sales around the University of Illinois Urbana-Champaign"><div class="loading">Loading the home sale map…</div></div>
-        <div class="map-footer">
-          <div class="legend" aria-label="Map color legend">
-            <p class="legend-title">Sale price · lighter to brighter means higher</p>
-            <div class="gradient" aria-hidden="true"></div>
-            <div class="legend-ticks"><span>$0</span><span>$250k</span><span>$500k</span><span>$750k</span><span>$1m+</span></div>
-            <p class="legend-note">Color scale is capped at $1,000,000 so typical sales remain distinguishable. Higher prices share the brightest color; the popup keeps each sale’s reported amount.</p>
-          </div>
-          <div class="key" aria-label="Map marker key">
-            <span><i class="key-dot" aria-hidden="true"></i> Individual sale (clusters when zoomed out)</span>
-            <span><i class="key-campus" aria-hidden="true"></i> Approximate campus landmark</span>
-          </div>
-        </div>
+      <section class="stats-grid" aria-label="Selected university summary">
+        <article class="stat-card"><span class="stat-label">Sales in this market</span><strong id="stat-sales">—</strong><span class="stat-foot">All records in the selected university market</span></article>
+        <article class="stat-card"><span class="stat-label">Median reported sale price</span><strong id="stat-median">—</strong><span class="stat-foot">$1,000 to $5,000,000 analysis range</span></article>
+        <article class="stat-card"><span class="stat-label">Median distance to campus</span><strong id="stat-distance">—</strong><span class="stat-foot">Straight-line miles from the source data</span></article>
+        <article class="stat-card insight-stat"><span class="stat-label">Price and distance association</span><strong id="stat-correlation">—</strong><span id="stat-correlation-note" class="stat-foot">Loading market relationship…</span></article>
       </section>
 
-      <section class="notes" aria-label="Map notes">
-        <div class="note"><strong>About the campus marker</strong>The data notes identify Foellinger Auditorium on the Illinois Main Quad as the distance reference, but do not provide its coordinates. The marker here is an approximate reference point; the dataset’s recorded campus distances were calculated from the source landmark coordinates.</div>
-        <div class="note"><strong>About the prices</strong>Values are as reported by the collection source and have not been independently verified. The dataset includes a few implausible prices. This view keeps the records and actual values intact, while limiting color intensity to the documented $1,000,000 cap.</div>
+      <section class="panel map-panel" aria-labelledby="map-heading">
+        <div class="panel-heading map-heading-row">
+          <div><p class="eyebrow">Explore the market</p><h2 id="map-heading">Home sales around <span id="map-university-name">campus</span></h2><p class="section-subtitle">Select a dot to see the reported home and sale details. Zoom in to separate clustered sales.</p></div>
+          <span class="record-pill" id="map-record-count" aria-live="polite">Loading sales…</span>
+        </div>
+        <div id="map" role="application" aria-label="Interactive map of home sales for the selected university"><div class="map-message">Loading the home sale map…</div></div>
+        <div class="map-bottom">
+          <div class="legend-block">
+            <strong>Sale price · higher prices use more vivid colors</strong>
+            <div class="price-gradient" aria-hidden="true"></div>
+            <div class="legend-labels"><span>$0</span><span>$250k</span><span>$500k</span><span>$750k</span><span>$1m+</span></div>
+            <p>Map color intensity is capped at $1,000,000. Higher reported prices use the strongest color; property details keep the full sale amount.</p>
+          </div>
+          <div class="marker-key"><span><i class="sale-key" aria-hidden="true"></i> Home sale (clusters when zoomed out)</span><span><i class="campus-key" aria-hidden="true">U</i> Approximate campus landmark</span></div>
+        </div>
+        <p class="source-caption">Property data: College-town home sales dataset, version 1.0. Campus reference pins are approximations derived from property coordinates and distances rounded to 0.1 mile.</p>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel scatter-panel" aria-labelledby="scatter-heading">
+          <div class="panel-heading"><p class="eyebrow">Distance vs. price</p><h2 id="scatter-heading">Do nearby homes sell for more?</h2><p class="section-subtitle">Each dot is one sale in the selected university market. Hover over a dot to preview its details.</p></div>
+          <div class="chart-summary" id="scatter-summary" aria-live="polite">Loading relationship…</div>
+          <div class="chart-wrap"><svg id="scatterplot" viewBox="0 0 760 390" role="img" aria-labelledby="scatter-heading scatter-description"><desc id="scatter-description">Scatterplot of distance to campus and home sale price for the selected university.</desc></svg></div>
+          <p class="chart-note" id="chart-note">For this chart and the summary statistics, we include reported sale prices from $1,000 through $5,000,000. Sales outside that range are omitted here because the data description flags implausible extremes. This is a descriptive association, not evidence that distance causes price differences.</p>
+        </section>
+
+        <section class="panel distance-panel" aria-labelledby="distance-heading">
+          <div class="panel-heading"><p class="eyebrow">Price by distance</p><h2 id="distance-heading">Compare distance bands</h2><p class="section-subtitle">Median sale price for homes in each range.</p></div>
+          <div id="distance-bands" class="distance-bands" aria-live="polite"><p class="muted">Loading distance comparisons…</p></div>
+          <div class="market-note"><strong>How to read this:</strong> Nearby and farther homes can differ in size, age, and neighborhood. These comparisons show patterns in recorded sales; they do not identify a cause.</div>
+        </section>
+      </section>
+
+      <section class="panel explorer-panel" aria-labelledby="explorer-heading">
+        <div class="panel-heading explorer-heading-row">
+          <div><p class="eyebrow">Property explorer</p><h2 id="explorer-heading">Find and compare homes</h2><p class="section-subtitle">Filter sales within this university market. The benchmark compares your matches with all eligible sales here.</p></div>
+          <button class="secondary-button" id="find-far-expensive" type="button" disabled>Highlight pricier, farther homes</button>
+        </div>
+        <div class="filter-grid">
+          <label>Minimum sale price ($)<input id="filter-price-min" type="number" min="0" step="10000" value="1000"></label>
+          <label>Maximum sale price ($)<input id="filter-price-max" type="number" min="0" step="10000" value="5000000"></label>
+          <label>Minimum campus distance (mi)<input id="filter-distance-min" type="number" min="0" step="0.1" placeholder="Any"></label>
+          <label>Maximum campus distance (mi)<input id="filter-distance-max" type="number" min="0" step="0.1" placeholder="Any"></label>
+          <label>Minimum living area (sq ft)<input id="filter-area-min" type="number" min="0" step="100" placeholder="Any"></label>
+          <label>Maximum living area (sq ft)<input id="filter-area-max" type="number" min="0" step="100" placeholder="Any"></label>
+          <label>Bedrooms, minimum<input id="filter-beds-min" type="number" min="0" step="1" placeholder="Any"></label>
+          <label>Bedrooms, maximum<input id="filter-beds-max" type="number" min="0" step="1" placeholder="Any"></label>
+          <label>Bathrooms, minimum<input id="filter-baths-min" type="number" min="0" step="0.5" placeholder="Any"></label>
+          <label>Bathrooms, maximum<input id="filter-baths-max" type="number" min="0" step="0.5" placeholder="Any"></label>
+          <label>Year built, minimum<input id="filter-year-min" type="number" min="1800" step="1" placeholder="Any"></label>
+          <label>Year built, maximum<input id="filter-year-max" type="number" min="1800" step="1" placeholder="Any"></label>
+          <label>Garage<select id="filter-garage"><option value="any">Any report</option><option value="1">Garage reported</option><option value="0">No garage reported</option><option value="missing">Not reported</option></select></label>
+          <label>Fireplace<select id="filter-fireplace"><option value="any">Any report</option><option value="1">Fireplace reported</option><option value="0">No fireplace reported</option><option value="missing">Not reported</option></select></label>
+          <label>Sort matches<select id="sort-results"><option value="price-desc">Price: high to low</option><option value="distance-desc">Farthest from campus</option><option value="price-asc">Price: low to high</option><option value="distance-asc">Closest to campus</option></select></label>
+        </div>
+        <div class="results-toolbar"><span id="results-count" aria-live="polite">Loading properties…</span><span id="results-comparison" class="comparison-text"></span><button class="text-button" id="reset-filters" type="button">Reset filters</button><button class="text-button" id="load-more" type="button" hidden>Load more</button></div>
+        <div class="table-scroll"><table><thead><tr><th>Sale price</th><th>Distance</th><th>City</th><th>Living area</th><th>Beds</th><th>Baths</th><th>Year built</th><th>Garage</th><th>Fireplace</th></tr></thead><tbody id="property-rows"><tr><td colspan="9" class="empty-state">Loading home sales…</td></tr></tbody></table></div>
+        <p class="table-note">By default, the explorer uses the $1,000–$5,000,000 range for comparability. Clear or change the price limits to include other reported values. Empty fields mean that no filter is applied. “Not reported” is kept distinct from “No.”</p>
+      </section>
+
+      <section class="method-note" aria-labelledby="method-heading">
+        <div><p class="eyebrow">What this can tell us</p><h2 id="method-heading">Patterns are not explanations</h2></div>
+        <p>This dataset can show whether sale prices and campus distance move together within a university market, and whether farther high-priced homes tend to have more living area or different recorded features. It cannot establish why buyers paid more: it does not measure neighborhood desirability, renovation quality, views, or many other influences. Reported home type is especially unreliable, so it is not used as an explanation.</p>
       </section>
     </main>
-    <footer>Data: College-town home sales dataset, version 1.0 (2026). Data collected March 2026. Map tiles © OpenStreetMap contributors.</footer>
+
+    <footer class="site-footer">Data: College-town home sales dataset, version 1.0 (2026). Data collected March 2026. Map tiles © OpenStreetMap contributors.</footer>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script>
-    (() => {
-      "use strict";
-      const UNIVERSITY = "University of Illinois Urbana-Champaign";
-      const CAMPUS_REFERENCE = [40.1037, -88.2272]; // Approximate Foellinger Auditorium / Main Quad reference.
-      const COLOR_MAX = 1000000;
-      const mapElement = document.getElementById("map");
-      const countElement = document.getElementById("sale-count");
-
-      function money(value) {
-        return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
-      }
-      function number(value, suffix = "") {
-        return value === "" || value == null ? "Not reported" : `${new Intl.NumberFormat("en-US").format(Number(value))}${suffix}`;
-      }
-      function colorForPrice(price) {
-        const stops = [
-          [0.00, [245, 233, 189]],
-          [0.43, [245, 173, 89]],
-          [0.72, [228, 108, 66]],
-          [1.00, [150, 51, 74]]
-        ];
-        const t = Math.max(0, Math.min(Number(price) / COLOR_MAX, 1));
-        let left = stops[0], right = stops[stops.length - 1];
-        for (let i = 0; i < stops.length - 1; i++) {
-          if (t >= stops[i][0] && t <= stops[i + 1][0]) { left = stops[i]; right = stops[i + 1]; break; }
-        }
-        const local = (t - left[0]) / (right[0] - left[0]);
-        const rgb = left[1].map((channel, index) => Math.round(channel + (right[1][index] - channel) * local));
-        return `rgb(${rgb.join(",")})`;
-      }
-      function popup(record) {
-        const place = [record.city, record.state].filter(Boolean).join(", ");
-        return `<div class="property-popup"><div class="popup-price">${money(Number(record.sale_price))}</div><div class="popup-place">${place || "Location not reported"}</div><div class="popup-grid"><div><span>Distance to campus</span><b>${number(record.miles_to_campus, " mi")}</b></div><div><span>Living area</span><b>${number(record.living_area_sqft, " sq ft")}</b></div><div><span>Bedrooms</span><b>${number(record.beds)}</b></div><div><span>Bathrooms</span><b>${number(record.baths)}</b></div><div><span>Year built</span><b>${number(record.year_built)}</b></div><div><span>Sale date</span><b>${record.sale_date || "Not reported"}</b></div></div></div>`;
-      }
-      function showError(message) {
-        mapElement.innerHTML = `<div class="error">${message}</div>`;
-        countElement.textContent = "Map unavailable";
-      }
-      if (!window.L || !window.Papa) {
-        showError("The interactive map libraries did not load. Check your internet connection and reload this page.");
-        return;
-      }
-      const map = L.map(mapElement, { scrollWheelZoom: false }).setView(CAMPUS_REFERENCE, 12);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
-      map.on("click", () => map.scrollWheelZoom.enable());
-
-      const campusIcon = L.divIcon({
-        className: "campus-marker-wrap",
-        html: '<div style="width:17px;height:17px;background:#bc382b;border:3px solid white;transform:rotate(45deg);box-shadow:0 1px 6px #333;border-radius:3px"></div>',
-        iconSize: [21, 21],
-        iconAnchor: [10, 10]
-      });
-      L.marker(CAMPUS_REFERENCE, { icon: campusIcon, zIndexOffset: 1000 })
-        .bindPopup("<strong>Approximate campus reference</strong><br>Foellinger Auditorium, Main Quad")
-        .addTo(map);
-
-      Papa.parse("data/college_town_home_sales.csv", {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete(results) {
-          const records = results.data.filter(row => row.university === UNIVERSITY && Number.isFinite(Number(row.latitude)) && Number.isFinite(Number(row.longitude)) && Number.isFinite(Number(row.sale_price)));
-          if (!records.length) {
-            showError("No Illinois campus sales were found in the dataset. Check that the CSV is available at data/college_town_home_sales.csv.");
-            return;
-          }
-          const clusters = L.markerClusterGroup({
-            chunkedLoading: true,
-            showCoverageOnHover: false,
-            maxClusterRadius: 48,
-            spiderfyOnMaxZoom: true
-          });
-          const bounds = L.latLngBounds([CAMPUS_REFERENCE]);
-          records.forEach(record => {
-            const position = [Number(record.latitude), Number(record.longitude)];
-            const marker = L.circleMarker(position, {
-              radius: 6,
-              weight: 1,
-              color: "#fffdf5",
-              opacity: .95,
-              fillColor: colorForPrice(record.sale_price),
-              fillOpacity: .9
-            });
-            marker.bindPopup(popup(record), { maxWidth: 290 });
-            clusters.addLayer(marker);
-            bounds.extend(position);
-          });
-          map.addLayer(clusters);
-          map.fitBounds(bounds.pad(.06), { maxZoom: 13 });
-          countElement.textContent = `${new Intl.NumberFormat("en-US").format(records.length)} sales shown`;
-          if (results.errors.length) console.warn("Some CSV rows could not be parsed:", results.errors);
-        },
-        error(error) {
-          console.error("Could not load sale data:", error);
-          showError("Sale data could not be loaded. Check that data/college_town_home_sales.csv is available, then reload.");
-        }
-      });
-    })();
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>

@@ -1,20 +1,30 @@
 # Campus Housing Explorer
 
-An interactive map exploring home sales associated with the University of Illinois Urbana-Champaign and the question: **Does Living Closer to Campus Cost More?**
+An interactive exploration of completed home sales around 11 US university campuses. The site asks: **Does Living Closer to Campus Cost More?**
 
-## What the map shows
+## Explore the data
 
-The page reads `data/college_town_home_sales.csv` directly and maps rows whose `university` value is `University of Illinois Urbana-Champaign`. Sale points cluster as users zoom out and separate into individual points as they zoom in. Select a point to see its reported sale price, straight-line campus distance, living area, bedroom and bathroom counts, year built, and sale date.
+Choose a university to update the map, campus reference pin, scatterplot, market statistics, distance comparisons, and property results together. Map markers are clustered at lower zoom levels. Select an individual home for its reported sale price, distance, area, beds, baths, year, garage, and fireplace details.
 
-The map's color scale runs from $0 to $1,000,000 and is capped at $1,000,000; sales at or above that amount share the brightest color. This keeps the colors useful for the bulk of this campus's prices while popups retain each row's actual `sale_price`. The data description warns that some prices are implausible, so values are presented as reported by the source and are not independently verified.
+The scatterplot includes each sale in the selected market with a reported price from $1,000 through $5,000,000. The description sheet flags impossible prices, including sales under $1,000 and above $5,000,000; the interface reports how many records fall outside the displayed analysis range. The trendline and Pearson correlation describe association only. They do not explain the cause of price differences.
 
-The data description identifies Foellinger Auditorium on the Illinois Main Quad as the landmark used for campus-distance assignment, but gives no landmark coordinates. The map therefore labels its campus marker as approximate. The plotted `miles_to_campus` values remain the values supplied with the dataset.
+Market median prices, the scatterplot, distance bands, and comparison benchmarks use the same $1,000–$5,000,000 range. The map and property explorer retain access to the original reported sale prices; explorer price bounds can be cleared to include records outside the analysis range. Missing property characteristics appear as “Not reported.” `home_type` is omitted from the explorer because the data description says it is unreliable.
 
-## Libraries and data
+## Campus reference locations
 
-The site uses Leaflet for the map, Leaflet.markercluster for point clustering, and Papa Parse to read the CSV in the browser. The map tiles come from OpenStreetMap. These libraries and map tiles are loaded from their public CDNs, so the interactive map requires an internet connection. No build step or server-side code is used.
+The source description identifies the campus landmarks used to calculate distance but does not publish their coordinates. `scripts/build_campus_references.py` reconstructs approximate reference coordinates for all 11 campuses by fitting property coordinates to the source `miles_to_campus` values. Those distances are rounded to 0.1 mile, so the reference pins are explicitly approximate and are not presented as exact official coordinates. The fit uses all records with coordinates and a reported distance in each university market.
 
-The source dataset is not modified. To publish, push the site files to `main`; the existing GitHub Pages workflow publishes the repository root.
+To regenerate the derived file using only the Python standard library:
+
+```sh
+python3 scripts/build_campus_references.py
+```
+
+This writes `data/campus_references.json`. The CSV remains the source for all home sale records and the five original dataset files are never modified.
+
+## Implementation
+
+The site is static HTML, CSS, and JavaScript. It reads the CSV and campus-reference JSON from relative repository paths. Leaflet displays the map, Leaflet.markercluster groups dense markers, Papa Parse reads the CSV, and the scatterplot is drawn as SVG. Map libraries and OpenStreetMap tiles load from external services, so the interactive map requires an internet connection. GitHub Pages publishes the repository root using the existing workflow.
 
 ## Citation
 
