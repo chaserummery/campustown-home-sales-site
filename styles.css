@@ -49,13 +49,15 @@ select:focus, input:focus, button:focus-visible { border-color: var(--green-mid)
 .map-bottom { display: flex; justify-content: space-between; gap: 28px; padding: 18px 23px 19px; border-top: 1px solid var(--line); }
 .legend-block { width: min(470px,100%); }
 .legend-block strong { display: block; margin-bottom: 9px; color: #35463f; font-size: .75rem; }
-.price-gradient { height: 10px; border-radius: 99px; background: linear-gradient(90deg,#f5e9bd 0%,#f5ad59 43%,#e46c42 72%,#96334a 100%); }
+.price-gradient { height: 10px; border-radius: 99px; background: linear-gradient(90deg,#f6e069 0%,#f6a23a 43%,#de4d30 72%,#80182b 100%); }
 .legend-labels { display: flex; justify-content: space-between; margin-top: 5px; color: var(--muted); font-size: .68rem; }
 .legend-block p, .source-caption, .chart-note, .table-note { margin: 8px 0 0; color: var(--muted); font-size: .69rem; line-height: 1.5; }
-.marker-key { display: flex; flex-wrap: wrap; align-content: start; gap: 12px 17px; padding-top: 3px; color: #52635b; font-size: .72rem; }
+.marker-key { display: flex; flex-wrap: wrap; align-content: start; gap: 12px 17px; max-width: 520px; padding-top: 3px; color: #52635b; font-size: .72rem; }
 .marker-key span { display: inline-flex; align-items: center; gap: 7px; }
-.sale-key { display: inline-block; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; background: #df7652; box-shadow: 0 0 0 1px #a94a39; }
-.campus-key { display: inline-grid; width: 22px; height: 22px; place-items: center; border: 2px solid white; border-radius: 50%; background: var(--green); color: white; font-size: .59rem; font-style: normal; font-weight: 850; box-shadow: 0 0 0 2px var(--gold); }
+.sale-key { display: inline-block; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; background: #de4d30; box-shadow: 0 0 0 1px #80182b; }
+.cluster-key { display: inline-grid; width: 25px; height: 25px; place-items: center; border: 2px solid white; border-radius: 50%; background: #de4d30; color: white; font-size: .55rem; font-style: normal; font-weight: 850; box-shadow: 0 0 0 1px #80182b; }
+.overview-key { display: inline-block; width: 25px; height: 17px; border: 2px solid white; border-radius: 50%; background: #f6a23a; box-shadow: 0 0 0 1px #80182b; }
+.campus-key { display: inline-grid; width: 27px; height: 31px; place-items: center; clip-path: polygon(50% 0, 100% 100%, 0 100%); background: #173e70; color: white; font-size: .83rem; font-style: normal; font-weight: 900; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
 .source-caption { padding: 0 23px 18px; margin: 0; }
 .content-grid { display: grid; grid-template-columns: minmax(0,1.65fr) minmax(300px,.85fr); align-items: stretch; gap: 17px; margin-top: 18px; }
 .scatter-panel, .distance-panel { overflow: hidden; }
@@ -115,9 +117,12 @@ td.feature-no, td.feature-missing { color: #89968f; }
 .popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 11px; }
 .popup-grid span { display: block; color: #849087; font-size: .62rem; }
 .popup-grid b { display: block; color: #2a4035; font-size: .75rem; font-weight: 750; }
-.campus-marker-shell { background: transparent; border: 0; }
-.campus-marker { display: grid; width: 32px; height: 32px; place-items: center; border: 3px solid white; border-radius: 50%; background: var(--green); color: white; font-size: .68rem; font-weight: 900; box-shadow: 0 0 0 3px var(--gold), 0 2px 8px rgba(0,0,0,.35); }
-.cluster-marker { border: 3px solid white; border-radius: 50%; background: rgba(35,91,65,.85); color: white; font-size: .72rem; font-weight: 800; text-align: center; box-shadow: 0 1px 5px rgba(20,40,30,.25); }
+.campus-marker-shell { background: transparent; border: 0; overflow: visible; }
+.campus-marker { display: block; width: 48px; height: 58px; color: #173e70; filter: drop-shadow(0 2px 3px rgba(12,29,52,.55)); }
+.campus-marker svg { display: block; width: 100%; height: 100%; stroke: #fff; stroke-width: 1.6px; }
+.cluster-marker { display: grid; place-items: center; border: 3px solid white; border-radius: 50%; font-size: .72rem; font-weight: 850; text-align: center; text-shadow: 0 1px 2px rgba(0,0,0,.18); box-shadow: 0 1px 5px rgba(20,40,30,.34), 0 0 0 1px rgba(81,42,27,.35); }
+.price-cluster-tooltip { padding: 7px 9px; border: 0; border-radius: 8px; background: #20372f; color: white; font-size: .72rem; line-height: 1.5; box-shadow: 0 3px 12px rgba(0,0,0,.2); }
+.price-cluster-tooltip::before { border-top-color: #20372f; }
 .map-attribution { font-size: .6rem; }
 .error-box { margin: 18px 23px; padding: 12px 14px; border-radius: 10px; background: #fff2ef; color: #842e27; font-size: .76rem; }
 .muted { color: var(--muted); }

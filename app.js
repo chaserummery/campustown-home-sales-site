@@ -16,6 +16,9 @@
   let map;
   let saleLayer;
   let campusLayer;
+  let overviewLayer;
+  const OVERVIEW_MAX_ZOOM = 10;
+  const OVERVIEW_BASE_CELL_PIXELS = 32;
   let visibleLimit = PAGE_SIZE;
   let mapReady = false;
 
@@ -60,7 +63,7 @@
   }
 
   function colorForPrice(price) {
-    const stops = [[0, [245, 233, 189]], [.43, [245, 173, 89]], [.72, [228, 108, 66]], [1, [150, 51, 74]]];
+    const stops = [[0, [246, 224, 105]], [.43, [246, 162, 58]], [.72, [222, 77, 48]], [1, [128, 24, 43]]];
     const t = Math.max(0, Math.min(price / MAP_COLOR_MAX, 1));
     let left = stops[0], right = stops.at(-1);
     for (let i = 0; i < stops.length - 1; i++) {
@@ -94,6 +97,7 @@
     mapReady = true;
     mapElement.replaceChildren();
     map = L.map(mapElement, { scrollWheelZoom: false, preferCanvas: true }).setView([40.1059, -88.2272], 12);
+    map.createPane("campusPane").style.zIndex = "650";
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -102,16 +106,77 @@
     saleLayer = L.markerClusterGroup({
       chunkedLoading: true,
       showCoverageOnHover: false,
-      maxClusterRadius: 48,
+      maxClusterRadius(zoom) {
+        if (zoom >= 15) return 10;
+        if (zoom >= 13) return 24;
+        return 48;
+      },
+      disableClusteringAtZoom: 20,
       spiderfyOnMaxZoom: true,
+      spiderfyDistanceMultiplier: 1.35,
       iconCreateFunction(cluster) {
         const count = cluster.getChildCount();
+        const prices = cluster.getAllChildMarkers().map(marker => marker.options.salePrice).filter(Number.isFinite);
+        const middlePrice = median(prices);
         const size = count < 100 ? 38 : count < 1000 ? 44 : 50;
-        return L.divIcon({ className: "", html: `<div class="cluster-marker" style="width:${size}px;height:${size}px;line-height:${size - 6}px">${numberFormat.format(count)}</div>`, iconSize: [size, size] });
+        const label = `${numberFormat.format(count)} properties · median sale price ${money(middlePrice)}`;
+        cluster.bindTooltip(`${numberFormat.format(count)} properties<br>Median sale price: ${money(middlePrice)}`, { direction: "top", className: "price-cluster-tooltip", opacity: .98 });
+        const textColor = (middlePrice || 0) < 720000 ? "#382b1d" : "#fff";
+        return L.divIcon({ className: "", html: `<div class="cluster-marker" title="${escapeHTML(label)}" aria-label="${escapeHTML(label)}" style="width:${size}px;height:${size}px;line-height:${size - 6}px;background:${colorForPrice(middlePrice || 0)};color:${textColor}">${numberFormat.format(count)}</div>`, iconSize: [size, size] });
       }
     });
     map.addLayer(saleLayer);
     campusLayer = L.layerGroup().addTo(map);
+    overviewLayer = L.layerGroup();
+    map.on("zoomend", syncMapPresentation);
+  }
+
+  function renderNeighborhoodOverview() {
+    overviewLayer.clearLayers();
+    const zoom = map.getZoom();
+    const cellPixels = Math.max(8, OVERVIEW_BASE_CELL_PIXELS * (2 ** (zoom - 10)));
+    const cells = new Map();
+    market.forEach(row => {
+      const lat = numeric(row, "latitude"), lon = numeric(row, "longitude"), price = numeric(row, "sale_price");
+      if (lat == null || lon == null || price == null) return;
+      const pixel = map.project([lat, lon], zoom);
+      const column = Math.floor(pixel.x / cellPixels);
+      const rowIndex = Math.floor(pixel.y / cellPixels);
+      const key = `${column}:${rowIndex}`;
+      let cell = cells.get(key);
+      if (!cell) {
+        cell = { column, rowIndex, prices: [], count: 0 };
+        cells.set(key, cell);
+      }
+      cell.prices.push(price);
+      cell.count++;
+    });
+    cells.forEach(cell => {
+      const middlePrice = median(cell.prices);
+      const northWest = map.unproject([cell.column * cellPixels, cell.rowIndex * cellPixels], zoom);
+      const southEast = map.unproject([(cell.column + 1) * cellPixels, (cell.rowIndex + 1) * cellPixels], zoom);
+      const marker = L.rectangle([northWest, southEast], {
+        weight: 1,
+        color: "#fffdf5",
+        opacity: .98,
+        fillColor: colorForPrice(middlePrice || 0),
+        fillOpacity: .72
+      });
+      marker.bindTooltip(`${numberFormat.format(cell.count)} properties<br>Median sale price: ${money(middlePrice)}`, { direction: "top", className: "price-cluster-tooltip", opacity: .98 });
+      overviewLayer.addLayer(marker);
+    });
+  }
+
+  function syncMapPresentation() {
+    if (!mapReady) return;
+    if (map.getZoom() <= OVERVIEW_MAX_ZOOM) {
+      if (map.hasLayer(saleLayer)) map.removeLayer(saleLayer);
+      renderNeighborhoodOverview();
+      if (!map.hasLayer(overviewLayer)) map.addLayer(overviewLayer);
+    } else {
+      if (map.hasLayer(overviewLayer)) map.removeLayer(overviewLayer);
+      if (!map.hasLayer(saleLayer)) map.addLayer(saleLayer);
+    }
   }
 
   function updateMap() {
@@ -121,8 +186,8 @@
     const campus = references.get(currentUniversity);
     const bounds = L.latLngBounds();
     if (campus) {
-      const campusIcon = L.divIcon({ className: "campus-marker-shell", html: '<span class="campus-marker">U</span>', iconSize: [38, 38], iconAnchor: [19, 19] });
-      const campusMarker = L.marker([campus.latitude, campus.longitude], { icon: campusIcon, zIndexOffset: 1000 });
+      const campusIcon = L.divIcon({ className: "campus-marker-shell", html: '<span class="campus-marker" aria-label="University campus"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 29 27H3L16 3Z" fill="currentColor"/><path d="M11 13h10v9H11zM9 23h14M13 15v5m3-5v5m3-5v5" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>', iconSize: [48, 58], iconAnchor: [24, 54] });
+      const campusMarker = L.marker([campus.latitude, campus.longitude], { icon: campusIcon, pane: "campusPane", zIndexOffset: 10000, keyboard: true });
       campusMarker.bindPopup(`<strong>${escapeHTML(currentUniversity)}</strong><br>${escapeHTML(campus.landmark)}<br><small>Approximate reference point</small>`);
       campusLayer.addLayer(campusMarker);
       bounds.extend([campus.latitude, campus.longitude]);
@@ -130,12 +195,13 @@
     market.forEach(row => {
       const lat = numeric(row, "latitude"), lon = numeric(row, "longitude"), price = numeric(row, "sale_price");
       if (lat == null || lon == null || price == null) return;
-      const marker = L.circleMarker([lat, lon], { radius: 5.5, weight: 1, color: "#fffdf5", opacity: .95, fillColor: colorForPrice(price), fillOpacity: .9 });
+      const marker = L.circleMarker([lat, lon], { radius: 5.5, weight: 1, color: "#fffdf5", opacity: .95, fillColor: colorForPrice(price), fillOpacity: .9, salePrice: price });
       marker.bindPopup(popupHTML(row), { maxWidth: 300 });
       saleLayer.addLayer(marker);
       bounds.extend([lat, lon]);
     });
     if (bounds.isValid()) map.fitBounds(bounds.pad(.06), { maxZoom: 13, animate: false });
+    syncMapPresentation();
     byId("map-record-count").textContent = `${numberFormat.format(market.length)} sales in this market`;
     byId("map-university-name").textContent = currentUniversity;
     requestAnimationFrame(() => map.invalidateSize());

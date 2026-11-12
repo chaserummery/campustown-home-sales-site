@@ -45,18 +45,18 @@
 
       <section class="panel map-panel" aria-labelledby="map-heading">
         <div class="panel-heading map-heading-row">
-          <div><p class="eyebrow">Explore the market</p><h2 id="map-heading">Home sales around <span id="map-university-name">campus</span></h2><p class="section-subtitle">Select a dot to see the reported home and sale details. Zoom in to separate clustered sales.</p></div>
+          <div><p class="eyebrow">Explore the market</p><h2 id="map-heading">Home sales around <span id="map-university-name">campus</span></h2><p class="section-subtitle">Zoomed-out cells summarize neighborhood prices; colored clusters show group medians. Zoom in for individual sales.</p></div>
           <span class="record-pill" id="map-record-count" aria-live="polite">Loading sales…</span>
         </div>
         <div id="map" role="application" aria-label="Interactive map of home sales for the selected university"><div class="map-message">Loading the home sale map…</div></div>
         <div class="map-bottom">
           <div class="legend-block">
-            <strong>Sale price · higher prices use more vivid colors</strong>
+            <strong>Sale price or group median · yellow to orange to dark red</strong>
             <div class="price-gradient" aria-hidden="true"></div>
             <div class="legend-labels"><span>$0</span><span>$250k</span><span>$500k</span><span>$750k</span><span>$1m+</span></div>
-            <p>Map color intensity is capped at $1,000,000. Higher reported prices use the strongest color; property details keep the full sale amount.</p>
+            <p>The scale is capped at $1,000,000. Individual points show each reported sale price; neighborhood cells and clusters use the median price of their included sales. Higher values share the darkest red; property details keep each full sale amount.</p>
           </div>
-          <div class="marker-key"><span><i class="sale-key" aria-hidden="true"></i> Home sale (clusters when zoomed out)</span><span><i class="campus-key" aria-hidden="true">U</i> Approximate campus landmark</span></div>
+          <div class="marker-key"><span><i class="sale-key" aria-hidden="true"></i> Individual home sale</span><span><i class="cluster-key" aria-hidden="true">12</i> Cluster count · median price</span><span><i class="overview-key" aria-hidden="true"></i> Neighborhood cell (zoomed out)</span><span><i class="campus-key" aria-hidden="true">⌂</i> Approximate campus landmark</span></div>
         </div>
         <p class="source-caption">Property data: College-town home sales dataset, version 1.0. Campus reference pins are approximations derived from property coordinates and distances rounded to 0.1 mile.</p>
       </section>
