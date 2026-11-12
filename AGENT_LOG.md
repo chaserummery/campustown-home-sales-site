@@ -106,3 +106,29 @@ Copy this outline for each entry:
 
 - **Agent produced:** Confirmed local asset paths and Pages root publishing were already correct. The selected cloud runtime allowed `cdn.jsdelivr.net` but denied `unpkg.com`, where Leaflet and MarkerCluster had been referenced. Switched Leaflet and MarkerCluster assets to the allowed jsDelivr URLs. Opened the application from its repository root using a local HTTP server.
 - **Checked or changed:** Used actual Leaflet, MarkerCluster, and Papa Parse files in a headless Chromium browser (no application-library test doubles). Checked stylesheet and script responses, actual CSV and campus JSON loading, map controls/clusters/campus marker, UIUC and other university selection, chart/stat updates, feature filters, pagination, and mobile layout. Repeated the browser check under `/campustown-home-sales-site/`; `styles.css`, `app.js`, CSV, and campus JSON all returned HTTP 200 and the selector populated 11 universities. OSM tile images were locally stubbed because the cloud browser cannot reach the tile host; the real deployed page continues to request OpenStreetMap tiles directly. No merge or deployment was performed.
+
+## 2026-11-12: Improve map price and zoom visualization
+
+- **Asked:**
+
+  ```text
+  Please improve the map visualization and interaction in my Campus Housing Explorer website.
+
+  The current map works, but there are three major usability problems:
+
+  1. The approximate campus landmark looks too similar to the numbered property clusters. Replace the campus marker with a visually distinct icon, such as a dark blue university icon or star. It should be clearly different in shape, color, and size from property markers, and remain visible above them.
+  2. The current green clusters only communicate the number of properties, not housing prices. I want users to immediately recognize expensive and affordable areas. Color each cluster based on the **median sale price of the properties inside that cluster**, using the same yellow-to-orange-to-dark-red price scale as the individual property markers. Keep the number inside the cluster to show the property count. Update the legend and add a tooltip showing the cluster's property count and median sale price.
+  3. The clustering behavior feels awkward when zooming in. Improve the zoom-dependent visualization:
+     - Zoomed out: provide a clear overview of neighborhood-level housing prices, preferably with aggregated geographic cells or another suitable approach.
+     - Medium zoom: show price-colored property clusters.
+     - Zoomed in: display individual sale markers as soon as practical, minimizing unnecessary small clusters. Handle overlapping coordinates gracefully.
+
+  Keep the university selector, distance-versus-price scatterplot, property filters, and existing features working.
+
+  Use the actual dataset. Do not invent property values. Maintain a consistent, clearly documented price scale, including the existing $1 million visualization cap. Keep the map responsive and performant.
+
+  Please test the interactions in a real browser if available, update the documentation, and summarize the changes. Do not merge the pull request until I have reviewed it.
+  ```
+
+- **Agent produced:** Added a visually distinct, elevated navy campus pin; price-colored cluster icons with per-cluster medians, count labels, and hover tooltips; and a low-zoom grid of geographic cells with actual median prices and counts. Reduced cluster radii at close zoom, retaining only near-overlapping points at the highest zoom so they can be spiderfied. Updated the legend and README visualization notes, including zoom thresholds and the unchanged $1,000,000 color cap.
+- **Checked or changed:** Tested in headless Chromium with actual Leaflet, MarkerCluster, and Papa Parse libraries and the repository CSV. Verified the UIUC campus pin, $225,000 cluster tooltip/color, 35 low-zoom geographic cells with computed median/count tooltips, cluster-to-overview-to-cluster zoom transitions, an 11-sale same-coordinate cluster spiderfying at maximum zoom, Florida selector/stat/scatter updates, garage filtering, and mobile layout without horizontal overflow. No page JavaScript exceptions occurred. OpenStreetMap tile requests were stubbed during the browser run because the cloud runtime cannot reach its tile host; the deployed site still loads the normal OSM tile URL. No merge or deployment was performed.
