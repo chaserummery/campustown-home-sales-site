@@ -78,3 +78,31 @@ Copy this outline for each entry:
 
 - **Agent produced:** Rebased the work on fetched `origin/main`; replaced the single-market page with an 11-university map, campus selector, clustered colored sale markers, SVG distance-price scatterplot and trendline, market insight cards, distance-band medians, and a filterable/sortable property table. Added a reproducible script and derived approximate campus reference locations from each sale's coordinates and source distances rounded to 0.1 mile. Rewrote README usage and data-method notes.
 - **Checked or changed:** Generated all 11 campus references; validated the CSV and reference names/counts. Ran HTML/JavaScript/Python syntax checks and `git diff --check`. A headless Playwright smoke check against the local HTTP-served site (using test doubles for CDN-hosted map/parser libraries) verified CSV loading, selector updates for UIUC/Florida/Iowa, map and scatter counts, distance bands, all numeric filters, garage/fireplace filters, quick high-price/farther preset, reset, pagination, sorting, mobile layout, and no application JavaScript errors. GitHub Pages could not be tested with this unmerged branch; its existing workflow publishes only pushes to `main`.
+
+## 2026-11-11: Repair the browser preview
+
+- **Asked:**
+
+  ```text
+  The new website preview is displaying as plain, unstyled HTML instead of the designed interactive website.
+
+  The CSS styling is missing, the map is not rendering, and the page is stuck on messages such as "Loading sales..." and "Loading the home sale map...".
+
+  Please investigate and fix the preview issue.
+
+  Check that:
+
+  - `styles.css` and all JavaScript files are correctly linked in `index.html`.
+  - All required files are available at the expected paths.
+  - The website is being served through a proper HTTP server rather than opened as a standalone HTML file.
+  - The CSV data loads successfully.
+  - The university selector, map, scatterplot, and property explorer actually work in a browser.
+  - Relative file paths will work when deployed to GitHub Pages under `/campustown-home-sales-site/`.
+
+  Please test the fully rendered website, not just the HTML source, and provide a working Web Preview.
+
+  Do not merge or deploy anything yet. I want to visually review the complete website first.
+  ```
+
+- **Agent produced:** Confirmed local asset paths and Pages root publishing were already correct. The selected cloud runtime allowed `cdn.jsdelivr.net` but denied `unpkg.com`, where Leaflet and MarkerCluster had been referenced. Switched Leaflet and MarkerCluster assets to the allowed jsDelivr URLs. Opened the application from its repository root using a local HTTP server.
+- **Checked or changed:** Used actual Leaflet, MarkerCluster, and Papa Parse files in a headless Chromium browser (no application-library test doubles). Checked stylesheet and script responses, actual CSV and campus JSON loading, map controls/clusters/campus marker, UIUC and other university selection, chart/stat updates, feature filters, pagination, and mobile layout. Repeated the browser check under `/campustown-home-sales-site/`; `styles.css`, `app.js`, CSV, and campus JSON all returned HTTP 200 and the selector populated 11 universities. OSM tile images were locally stubbed because the cloud browser cannot reach the tile host; the real deployed page continues to request OpenStreetMap tiles directly. No merge or deployment was performed.
