@@ -5,6 +5,21 @@
   const PRICE_MAX = 5000000;
   const MAP_COLOR_MAX = 1000000;
   const PAGE_SIZE = 100;
+  const SMALL_GROUP_THRESHOLD = 30;
+  const FILTER_CONTROL_IDS = [
+    "filter-price-min", "filter-price-max", "filter-distance-min", "filter-distance-max",
+    "filter-area-min", "filter-area-max", "filter-beds-min", "filter-beds-max",
+    "filter-baths-min", "filter-baths-max", "filter-year-min", "filter-year-max",
+    "filter-garage", "filter-fireplace"
+  ];
+  const FILTER_RANGE_PAIRS = [
+    ["filter-price-min", "filter-price-max", "sale price"],
+    ["filter-distance-min", "filter-distance-max", "distance"],
+    ["filter-area-min", "filter-area-max", "living area"],
+    ["filter-beds-min", "filter-beds-max", "bedrooms"],
+    ["filter-baths-min", "filter-baths-max", "bathrooms"],
+    ["filter-year-min", "filter-year-max", "year built"]
+  ];
   const universitySelect = document.getElementById("university-select");
   const mapElement = document.getElementById("map");
   const numberFormat = new Intl.NumberFormat("en-US");
@@ -17,6 +32,7 @@
   let saleLayer;
   let campusLayer;
   let overviewLayer;
+  let appliedFilterValues = new Map();
   const OVERVIEW_MAX_ZOOM = 10;
   const OVERVIEW_BASE_CELL_PIXELS = 32;
   let visibleLimit = PAGE_SIZE;
@@ -219,14 +235,17 @@
     byId("stat-distance").textContent = middleDistance == null ? "Not available" : `${middleDistance.toFixed(1)} mi`;
     const belowRange = market.filter(row => numeric(row, "sale_price") != null && numeric(row, "sale_price") < PRICE_MIN).length;
     const aboveRange = market.filter(row => numeric(row, "sale_price") != null && numeric(row, "sale_price") > PRICE_MAX).length;
-    byId("chart-note").textContent = `Chart and summary statistics include reported prices from ${money(PRICE_MIN)} through ${money(PRICE_MAX)}. In this market, ${numberFormat.format(belowRange)} sale${belowRange === 1 ? "" : "s"} below the range and ${numberFormat.format(aboveRange)} above it are excluded because the data description flags implausible extremes. This is a descriptive association, not evidence that distance causes price differences.`;
+    byId("chart-note").textContent = `The chart and distance comparisons use homes sold for ${money(PRICE_MIN)} to ${money(PRICE_MAX)}. This market has ${numberFormat.format(belowRange)} reported sale${belowRange === 1 ? "" : "s"} below that range and ${numberFormat.format(aboveRange)} above it; they are left out because the dataset notes flag extreme prices as implausible. Home size, age, and neighborhood can also affect prices, so this chart shows a pattern, not a cause.`;
     if (!trend) {
       byId("stat-correlation").textContent = "Not available";
-      byId("stat-correlation-note").textContent = "Not enough complete, in-range prices to compare.";
+      byId("stat-correlation-note").textContent = "There are not enough comparable sales to show a pattern.";
+      byId("statistical-details").textContent = "A trend could not be calculated because there are not enough sales with usable prices and distances.";
     } else {
-      byId("stat-correlation").textContent = `${trend.r >= 0 ? "+" : ""}${trend.r.toFixed(2)} r`;
+      const noClearPattern = Math.abs(trend.r) < 0.1;
       const direction = trend.slope > 0 ? "higher" : trend.slope < 0 ? "lower" : "similar";
-      byId("stat-correlation-note").textContent = `Prices trend ${direction} farther from campus in this unadjusted comparison.`;
+      byId("stat-correlation").textContent = noClearPattern ? "No clear pattern" : trend.slope > 0 ? "Higher farther away" : "Lower farther away";
+      byId("stat-correlation-note").textContent = "Homes also differ in size, age, and neighborhood.";
+      byId("statistical-details").textContent = `Using ${numberFormat.format(valid.length)} sales in the ${money(PRICE_MIN)}–${money(PRICE_MAX)} range: Pearson correlation r = ${trend.r.toFixed(2)} (from −1 to +1). The fitted straight-line trend points ${direction} as distance increases by about ${money(Math.abs(trend.slope))} per mile. This calculation does not adjust for home size, age, or neighborhood and does not show that distance causes a price change.`;
     }
     renderDistanceBands(valid);
     renderScatter(valid, trend);
@@ -235,10 +254,10 @@
 
   function renderDistanceBands(valid) {
     const bands = [
-      { label: "< 1 mi", min: -Infinity, max: 1 },
-      { label: "1–<3 mi", min: 1, max: 3 },
-      { label: "3–<5 mi", min: 3, max: 5 },
-      { label: "5+ mi", min: 5, max: Infinity }
+      { label: "Under 1 mile", min: -Infinity, max: 1 },
+      { label: "1 to under 3 miles", min: 1, max: 3 },
+      { label: "3 to under 5 miles", min: 3, max: 5 },
+      { label: "5 miles or more", min: 5, max: Infinity }
     ].map(band => {
       const rows = valid.filter(row => {
         const d = numeric(row, "miles_to_campus");
@@ -248,7 +267,11 @@
       return { ...band, count: rows.length, value: median(values) };
     });
     const max = Math.max(1, ...bands.map(band => band.value || 0));
-    byId("distance-bands").innerHTML = bands.map(band => `<div class="band-row" title="${band.count} eligible sales"><span class="band-name">${band.label}</span><div class="band-bar-track"><div class="band-bar" style="width:${band.value == null ? 0 : (band.value / max) * 100}%"></div></div><strong class="band-price">${money(band.value)}</strong><span class="band-count">${numberFormat.format(band.count)} sales</span></div>`).join("");
+    byId("distance-bands").innerHTML = bands.map(band => {
+      const smallGroup = band.count > 0 && band.count < SMALL_GROUP_THRESHOLD;
+      const homesLabel = `${numberFormat.format(band.count)} ${band.count === 1 ? "home" : "homes"} sold`;
+      return `<div class="band-row" title="${homesLabel}"><span class="band-name">${band.label}</span><div class="band-bar-track" role="img" aria-label="Median sale price: ${escapeHTML(money(band.value))}"><div class="band-bar" style="width:${band.value == null ? 0 : (band.value / max) * 100}%"></div></div><strong class="band-price">${band.value == null ? "No sales" : money(band.value)}</strong><span class="band-count">${homesLabel}${smallGroup ? '<span class="small-group-badge" title="Fewer than 30 comparable sales in this group">Small group</span>' : ""}</span></div>`;
+    }).join("");
   }
 
   function renderScatter(valid, trend) {
@@ -291,18 +314,62 @@
       const y1 = trend.intercept + trend.slope * xMax;
       const startPrice = Math.max(0, Math.min(yMax, y0));
       const endPrice = Math.max(0, Math.min(yMax, y1));
-      bits.push(`<line class="trend-line" x1="${sx(0)}" y1="${sy(startPrice)}" x2="${sx(xMax)}" y2="${sy(endPrice)}"><title>Ordinary least-squares trendline</title></line>`);
+      bits.push(`<line class="trend-line" x1="${sx(0)}" y1="${sy(startPrice)}" x2="${sx(xMax)}" y2="${sy(endPrice)}"><title>Dashed line showing the overall price direction</title></line>`);
     }
     svg.innerHTML = bits.join("");
-    const summary = trend
-      ? `Showing ${numberFormat.format(valid.length)} sales. Pearson correlation r = ${trend.r.toFixed(2)}; the fitted straight-line trend is ${trend.slope >= 0 ? "up" : "down"} by about ${money(Math.abs(trend.slope))} per mile. This does not adjust for home size, age, or neighborhood.`
-      : "Not enough valid sales to calculate a distance and price association.";
+    const summary = !trend
+      ? "There are not enough comparable sales to show how prices change with distance."
+      : Math.abs(trend.r) < 0.1
+        ? `Across ${numberFormat.format(valid.length)} sales, there is no clear overall price pattern by distance. The dots show how much prices vary from home to home.`
+        : `Across ${numberFormat.format(valid.length)} sales, prices tend to be ${trend.slope > 0 ? "higher" : "lower"} farther from campus, though prices vary widely from home to home.`;
     byId("scatter-summary").textContent = summary;
   }
 
   function readFilter(id) {
-    const raw = byId(id).value.trim();
+    const raw = appliedFilterValues.has(id) ? appliedFilterValues.get(id) : byId(id).value.trim();
     return raw === "" ? null : Number(raw);
+  }
+
+  function currentFilterValue(id) {
+    return byId(id).value.trim();
+  }
+
+  function captureAppliedFilters() {
+    appliedFilterValues = new Map(FILTER_CONTROL_IDS.map(id => [id, currentFilterValue(id)]));
+  }
+
+  function filtersArePending() {
+    return FILTER_CONTROL_IDS.some(id => currentFilterValue(id) !== appliedFilterValues.get(id));
+  }
+
+  function showFilterStatus(message, tone = "") {
+    const status = byId("filter-status");
+    status.textContent = message;
+    status.classList.remove("pending", "error");
+    if (tone) status.classList.add(tone);
+  }
+
+  function noteFilterChanges() {
+    if (filtersArePending()) {
+      showFilterStatus("Filter changes waiting to be applied. The current filter criteria are still in use.", "pending");
+    } else {
+      showFilterStatus("Filters update when you select Apply filters.");
+    }
+  }
+
+  function applyCurrentFilters() {
+    for (const [minId, maxId, label] of FILTER_RANGE_PAIRS) {
+      const minRaw = currentFilterValue(minId), maxRaw = currentFilterValue(maxId);
+      if (minRaw !== "" && maxRaw !== "" && Number(minRaw) > Number(maxRaw)) {
+        showFilterStatus(`Check the ${label} range: the minimum must be less than or equal to the maximum.`, "error");
+        return false;
+      }
+    }
+    captureAppliedFilters();
+    visibleLimit = PAGE_SIZE;
+    const count = renderExplorer();
+    showFilterStatus(`${numberFormat.format(count)} ${count === 1 ? "home matches" : "homes match"} these filters.`);
+    return true;
   }
 
   function applyExplorerFilter(row) {
@@ -321,7 +388,7 @@
       if (value == null || (bound === "min" ? value < limit : value > limit)) return false;
     }
     for (const [id, field] of [["filter-garage", "has_garage"], ["filter-fireplace", "has_fireplace"]]) {
-      const selected = byId(id).value;
+      const selected = appliedFilterValues.has(id) ? appliedFilterValues.get(id) : byId(id).value;
       const actual = row[field] === "" ? "missing" : row[field];
       if (selected !== "any" && actual !== selected) return false;
     }
@@ -343,13 +410,20 @@
     } else {
       body.innerHTML = visible.map(row => `<tr><td class="price-cell">${money(numeric(row, "sale_price"))}</td><td>${number(numeric(row, "miles_to_campus"), " mi")}</td><td class="city-cell">${escapeHTML([row.city, row.state].filter(Boolean).join(", "))}</td><td>${number(numeric(row, "living_area_sqft"), " sq ft")}</td><td>${number(numeric(row, "beds"))}</td><td>${number(numeric(row, "baths"))}</td><td>${number(numeric(row, "year_built"))}</td><td class="${featureClass(row.has_garage)}">${featureStatus(row.has_garage)}</td><td class="${featureClass(row.has_fireplace)}">${featureStatus(row.has_fireplace)}</td></tr>`).join("");
     }
-    byId("results-count").textContent = `Showing ${numberFormat.format(visible.length)} of ${numberFormat.format(filtered.length)} matching sales`;
+    byId("results-count").textContent = filtered.length === 0
+      ? "No homes match these filters."
+      : filtered.length > visible.length
+        ? `Showing the first ${numberFormat.format(visible.length)} of ${numberFormat.format(filtered.length)} matching homes`
+        : `Showing all ${numberFormat.format(filtered.length)} matching homes`;
     byId("load-more").hidden = filtered.length <= visible.length;
     const selectedPrices = filtered.map(row => numeric(row, "sale_price")).filter(value => value != null);
     const eligiblePrices = market.filter(analysisPrice).map(row => numeric(row, "sale_price"));
     const selectedMedian = median(selectedPrices);
     const marketMedian = median(eligiblePrices);
-    byId("results-comparison").textContent = selectedMedian == null ? "No reported prices for this selection." : `Filtered match median ${money(selectedMedian)} · eligible market median ${money(marketMedian)}`;
+    byId("results-comparison").textContent = selectedMedian == null
+      ? "No homes to compare."
+      : `Middle price for matches: ${money(selectedMedian)} · whole-market middle price (usual range): ${money(marketMedian)}`;
+    return filtered.length;
   }
 
   function onUniversityChange() {
@@ -359,7 +433,10 @@
     updateMap();
     const stats = updateStats();
     byId("find-far-expensive").disabled = stats.middlePrice == null || stats.middleDistance == null;
-    renderExplorer();
+    const matchCount = renderExplorer();
+    if (!filtersArePending()) {
+      showFilterStatus(`${numberFormat.format(matchCount)} homes match in this university market.`);
+    }
   }
 
   function initialize() {
@@ -384,11 +461,14 @@
       universitySelect.disabled = false;
       initMap();
       universitySelect.addEventListener("change", onUniversityChange);
-      const filterInputs = document.querySelectorAll("#explorer-heading ~ .filter-grid input, #explorer-heading ~ .filter-grid select, .filter-grid input, .filter-grid select, #sort-results");
-      filterInputs.forEach(input => {
-        input.addEventListener("input", () => { visibleLimit = PAGE_SIZE; renderExplorer(); });
-        input.addEventListener("change", () => { visibleLimit = PAGE_SIZE; renderExplorer(); });
+      captureAppliedFilters();
+      FILTER_CONTROL_IDS.forEach(id => {
+        const input = byId(id);
+        input.addEventListener("input", noteFilterChanges);
+        input.addEventListener("change", noteFilterChanges);
       });
+      byId("apply-filters").addEventListener("click", applyCurrentFilters);
+      byId("sort-results").addEventListener("change", () => { visibleLimit = PAGE_SIZE; renderExplorer(); });
       byId("reset-filters").addEventListener("click", () => {
         document.querySelectorAll(".filter-grid input").forEach(input => { input.value = ""; });
         byId("filter-price-min").value = String(PRICE_MIN);
@@ -396,8 +476,10 @@
         byId("filter-garage").value = "any";
         byId("filter-fireplace").value = "any";
         byId("sort-results").value = "price-desc";
+        captureAppliedFilters();
         visibleLimit = PAGE_SIZE;
         renderExplorer();
+        showFilterStatus("Filters reset to the usual price range and all home features.");
       });
       byId("load-more").addEventListener("click", () => { visibleLimit += PAGE_SIZE; renderExplorer(); });
       byId("find-far-expensive").addEventListener("click", () => {
@@ -406,8 +488,7 @@
         byId("filter-price-min").value = String(median(prices));
         byId("filter-distance-min").value = median(distances).toFixed(1);
         byId("sort-results").value = "price-desc";
-        visibleLimit = PAGE_SIZE;
-        renderExplorer();
+        applyCurrentFilters();
         byId("explorer-heading").scrollIntoView({ behavior: "smooth", block: "start" });
       });
       onUniversityChange();

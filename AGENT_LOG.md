@@ -132,3 +132,44 @@ Copy this outline for each entry:
 
 - **Agent produced:** Added a visually distinct, elevated navy campus pin; price-colored cluster icons with per-cluster medians, count labels, and hover tooltips; and a low-zoom grid of geographic cells with actual median prices and counts. Reduced cluster radii at close zoom, retaining only near-overlapping points at the highest zoom so they can be spiderfied. Updated the legend and README visualization notes, including zoom thresholds and the unchanged $1,000,000 color cap.
 - **Checked or changed:** Tested in headless Chromium with actual Leaflet, MarkerCluster, and Papa Parse libraries and the repository CSV. Verified the UIUC campus pin, $225,000 cluster tooltip/color, 35 low-zoom geographic cells with computed median/count tooltips, cluster-to-overview-to-cluster zoom transitions, an 11-sale same-coordinate cluster spiderfying at maximum zoom, Florida selector/stat/scatter updates, garage filtering, and mobile layout without horizontal overflow. No page JavaScript exceptions occurred. OpenStreetMap tile requests were stubbed during the browser run because the cloud runtime cannot reach its tile host; the deployed site still loads the normal OSM tile URL. No merge or deployment was performed.
+
+## 2026-11-18: Make the website easier to understand and filter
+
+- **Asked:**
+
+  ```text
+  I want to improve the usability of the Campus Housing Explorer website.
+
+  From now on, please prioritize **beginner-friendly design and explanations**. Assume the website visitors have no background in statistics or data science. I want the website to feel like an intuitive consumer-facing product, not a technical analytics dashboard.
+
+  Please make the following improvements:
+
+  1. **Simplify the Distance vs. Price section.**
+     - Replace technical statements such as "Pearson correlation r = 0.30" and "fitted straight-line trend" with plain-English explanations of what the data suggests.
+     - Keep the statistical information available under an expandable "View statistical details" section.
+     - Explain what each dot and the trend line represent.
+  2. **Redesign the Compare Distance Bands section.**
+     - Rename it to "How do home prices change with distance?"
+     - Make it immediately clear that each group represents a distance range from campus.
+     - Clearly explain that the bars represent median sale prices, not the number of homes.
+     - Show the number of sales in each group and indicate when a group has a small sample size.
+  3. **Fix or improve the Property Explorer filters.**
+     - I noticed that changing the numeric filter values does not always visibly change the search results.
+     - Investigate whether the filters are functioning correctly.
+     - Make filtering behavior obvious and predictable. Either update results immediately as values change or provide a clear "Apply Filters" button.
+     - Show the updated number of matching homes after filtering.
+     - Make it clear when only the first 100 matching homes are displayed.
+     - Test different price, distance, bedroom, and property-size filters to verify that they work correctly.
+  4. **Improve the overall user experience.**
+     - Replace unnecessary statistical jargon with understandable language.
+     - Add short explanations or tooltips for concepts that ordinary users might not understand.
+     - Keep the design clean, modern, and visually consistent.
+     - Preserve the underlying calculations and data accuracy.
+
+  Before making changes, briefly explain what you plan to change and why. After implementing them, summarize the changes in simple English so I can understand what was modified.
+
+  Please test the functionality, do not modify the original dataset, and do not merge or deploy anything until I review the changes.
+  ```
+
+- **Agent produced:** Reworded the relationship chart and summary cards in everyday language while keeping the Pearson correlation and fitted-line details behind an expandable control. Explained dots and the dashed line. Renamed the distance comparison, defined the distance groups and price bars, showed each group's home count, and flags groups below 30 comparable sales. Added an explicit Apply Filters flow with pending and invalid-range messages, visible match counts, clear first-100 labeling, and a next-100 button. Sorting remains immediate.
+- **Checked or changed:** Found that filters were already re-rendering on each keystroke, but the results label did not say that only the first 100 rows were shown. Replaced that ambiguous behavior with explicit apply-to-update controls. In Chromium, verified the price minimum returned 292 matching UIUC sales, campus distance returned 708, bedrooms returned 1,412, and living area returned 248; the displayed rows met each chosen limit. Also checked unapplied changes preserve current rows, invalid ranges preserve prior results with a clear message, reset restores defaults, pagination reaches 200 rows, and Davis shows a small-group label. The university selector and mobile layout still work; no JavaScript exceptions occurred. The data CSV was not changed.

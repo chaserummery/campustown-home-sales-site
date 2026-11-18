@@ -38,9 +38,9 @@
 
       <section class="stats-grid" aria-label="Selected university summary">
         <article class="stat-card"><span class="stat-label">Sales in this market</span><strong id="stat-sales">—</strong><span class="stat-foot">All records in the selected university market</span></article>
-        <article class="stat-card"><span class="stat-label">Median reported sale price</span><strong id="stat-median">—</strong><span class="stat-foot">$1,000 to $5,000,000 analysis range</span></article>
-        <article class="stat-card"><span class="stat-label">Median distance to campus</span><strong id="stat-distance">—</strong><span class="stat-foot">Straight-line miles from the source data</span></article>
-        <article class="stat-card insight-stat"><span class="stat-label">Price and distance association</span><strong id="stat-correlation">—</strong><span id="stat-correlation-note" class="stat-foot">Loading market relationship…</span></article>
+        <article class="stat-card"><span class="stat-label">Typical sale price (middle price)</span><strong id="stat-median">—</strong><span class="stat-foot">Homes outside the usual price range are not included here.</span></article>
+        <article class="stat-card"><span class="stat-label">Typical distance to campus</span><strong id="stat-distance">—</strong><span class="stat-foot">Middle distance in a straight line from the campus reference</span></article>
+        <article class="stat-card insight-stat"><span class="stat-label">Do homes farther away cost more?</span><strong id="stat-correlation">—</strong><span id="stat-correlation-note" class="stat-foot">Loading the price pattern…</span></article>
       </section>
 
       <section class="panel map-panel" aria-labelledby="map-heading">
@@ -63,22 +63,23 @@
 
       <section class="content-grid">
         <section class="panel scatter-panel" aria-labelledby="scatter-heading">
-          <div class="panel-heading"><p class="eyebrow">Distance vs. price</p><h2 id="scatter-heading">Do nearby homes sell for more?</h2><p class="section-subtitle">Each dot is one sale in the selected university market. Hover over a dot to preview its details.</p></div>
+          <div class="panel-heading"><p class="eyebrow">Distance and sale price</p><h2 id="scatter-heading">Do nearby homes sell for more?</h2><p class="section-subtitle">Each dot is one home sale; hover for its details. Farther right means farther from campus, and higher up means a higher price. The dashed line shows the overall direction across sales, not the price of any one home.</p></div>
           <div class="chart-summary" id="scatter-summary" aria-live="polite">Loading relationship…</div>
           <div class="chart-wrap"><svg id="scatterplot" viewBox="0 0 760 390" role="img" aria-labelledby="scatter-heading scatter-description"><desc id="scatter-description">Scatterplot of distance to campus and home sale price for the selected university.</desc></svg></div>
-          <p class="chart-note" id="chart-note">For this chart and the summary statistics, we include reported sale prices from $1,000 through $5,000,000. Sales outside that range are omitted here because the data description flags implausible extremes. This is a descriptive association, not evidence that distance causes price differences.</p>
+          <p class="chart-note" id="chart-note">To make the comparison easier to read, this chart uses homes sold for $1,000 to $5,000,000. It shows a price pattern, but cannot tell us what caused the differences.</p>
+          <details class="stat-details"><summary>View statistical details</summary><p id="statistical-details">Statistical details will appear when the selected market loads.</p></details>
         </section>
 
         <section class="panel distance-panel" aria-labelledby="distance-heading">
-          <div class="panel-heading"><p class="eyebrow">Price by distance</p><h2 id="distance-heading">Compare distance bands</h2><p class="section-subtitle">Median sale price for homes in each range.</p></div>
+          <div class="panel-heading"><p class="eyebrow">Price by distance</p><h2 id="distance-heading">How do home prices change with distance?</h2><p class="section-subtitle">Each row groups homes by distance from campus. Bars show median (middle) sale prices from $1,000 to $5,000,000. A longer bar means a higher price, not more homes sold.</p></div>
           <div id="distance-bands" class="distance-bands" aria-live="polite"><p class="muted">Loading distance comparisons…</p></div>
-          <div class="market-note"><strong>How to read this:</strong> Nearby and farther homes can differ in size, age, and neighborhood. These comparisons show patterns in recorded sales; they do not identify a cause.</div>
+          <div class="market-note"><strong>How to read this:</strong> The count below each bar shows how many homes sold in that distance range. Groups with fewer than 30 comparable sales are marked “Small group”; their middle price can be less representative. Home size, age, and neighborhood can also affect prices.</div>
         </section>
       </section>
 
       <section class="panel explorer-panel" aria-labelledby="explorer-heading">
         <div class="panel-heading explorer-heading-row">
-          <div><p class="eyebrow">Property explorer</p><h2 id="explorer-heading">Find and compare homes</h2><p class="section-subtitle">Filter sales within this university market. The benchmark compares your matches with all eligible sales here.</p></div>
+          <div><p class="eyebrow">Property explorer</p><h2 id="explorer-heading">Find and compare homes</h2><p class="section-subtitle">Choose any price, distance, or home-feature ranges below, then select Apply filters to update the list. Sorting changes the current list immediately.</p></div>
           <button class="secondary-button" id="find-far-expensive" type="button" disabled>Highlight pricier, farther homes</button>
         </div>
         <div class="filter-grid">
@@ -98,9 +99,10 @@
           <label>Fireplace<select id="filter-fireplace"><option value="any">Any report</option><option value="1">Fireplace reported</option><option value="0">No fireplace reported</option><option value="missing">Not reported</option></select></label>
           <label>Sort matches<select id="sort-results"><option value="price-desc">Price: high to low</option><option value="distance-desc">Farthest from campus</option><option value="price-asc">Price: low to high</option><option value="distance-asc">Closest to campus</option></select></label>
         </div>
-        <div class="results-toolbar"><span id="results-count" aria-live="polite">Loading properties…</span><span id="results-comparison" class="comparison-text"></span><button class="text-button" id="reset-filters" type="button">Reset filters</button><button class="text-button" id="load-more" type="button" hidden>Load more</button></div>
+        <div class="filter-actions"><span id="filter-status" aria-live="polite">Choose ranges, then apply them to update the results.</span><button class="primary-button" id="apply-filters" type="button">Apply filters</button></div>
+        <div class="results-toolbar"><span id="results-count" aria-live="polite">Loading properties…</span><span id="results-comparison" class="comparison-text"></span><button class="text-button" id="reset-filters" type="button">Reset filters</button><button class="text-button" id="load-more" type="button" hidden>Show next 100 homes</button></div>
         <div class="table-scroll"><table><thead><tr><th>Sale price</th><th>Distance</th><th>City</th><th>Living area</th><th>Beds</th><th>Baths</th><th>Year built</th><th>Garage</th><th>Fireplace</th></tr></thead><tbody id="property-rows"><tr><td colspan="9" class="empty-state">Loading home sales…</td></tr></tbody></table></div>
-        <p class="table-note">By default, the explorer uses the $1,000–$5,000,000 range for comparability. Clear or change the price limits to include other reported values. Empty fields mean that no filter is applied. “Not reported” is kept distinct from “No.”</p>
+        <p class="table-note">The initial price range is $1,000–$5,000,000; clear or change it to include other reported prices. Empty fields do not limit the results. “Not reported” is different from “No.” The table shows up to 100 homes at a time; select “Show next 100 homes” to see more matches.</p>
       </section>
 
       <section class="method-note" aria-labelledby="method-heading">
