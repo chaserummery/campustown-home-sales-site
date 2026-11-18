@@ -10,7 +10,11 @@ The campus reference uses a large navy university pin above the sale layers so i
 
 All map colors use a continuous yellow-to-orange-to-dark-red scale from $0 to $1,000,000. The color scale is capped at $1,000,000, so higher values share the darkest red. Individual sales are colored by their reported sale price; neighborhood cells and property clusters use the median of the reported prices they contain. Aggregated marker tooltips report the underlying count and median. Map popups retain full individual prices, including values above the cap.
 
-The scatterplot includes each sale in the selected market with a reported price from $1,000 through $5,000,000. The description sheet flags impossible prices, including sales under $1,000 and above $5,000,000; the interface reports how many records fall outside the displayed analysis range. The trendline and Pearson correlation describe association only. They do not explain the cause of price differences.
+The distance and price chart uses plain-language summaries: each dot is a sale, and the dashed line shows the broad direction across homes. Expand “View statistical details” to see the Pearson correlation and fitted-line estimate. The chart includes reported prices from $1,000 through $5,000,000 because the description sheet flags prices outside that range as implausible. These calculations describe a pattern; they do not explain what caused prices to differ.
+
+The distance comparison groups sales by how far each home is from campus. Its bars show each group's middle (median) sale price, while the number below each bar shows how many homes sold in that range. Groups with fewer than 30 sales are labeled “Small group” so visitors know that a few sales may shift the middle price.
+
+In the property explorer, visitors can edit several ranges and then select “Apply filters.” The displayed result count reports all matching homes, while the table shows the first 100; “Show next 100 homes” displays more. Sorting updates the current results immediately. The source CSV remains unchanged.
 
 Market median prices, the scatterplot, distance bands, and comparison benchmarks use the same $1,000–$5,000,000 range. The map and property explorer retain access to the original reported sale prices; explorer price bounds can be cleared to include records outside the analysis range. Missing property characteristics appear as “Not reported.” `home_type` is omitted from the explorer because the data description says it is unreliable.
 
